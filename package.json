@@ -1,0 +1,22 @@
+{
+  "name": "sensdrive",
+  "version": "1.0.0",
+  "description": "conexión y gestión de sensores del coche",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdoneyAngel/SensDrive.git"
+  },
+  "author": "Adoney",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AdoneyAngel/SensDrive/issues"
+  },
+  "homepage": "https://github.com/AdoneyAngel/SensDrive#readme",
+  "dependencies": {
+    "@types/node": "^22.15.28"
+  }
+}
