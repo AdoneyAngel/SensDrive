@@ -16,6 +16,7 @@ app.use(express.json())
 Arduino.getInstance() //Se inicia Arduino y su conexión
 Car.getInstance() //Todos los sensores
 
+//TEST URL's
 app.post("/", async (req, res) => {
 
     const body = req.body
