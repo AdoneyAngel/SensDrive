@@ -1,0 +1,22 @@
+{
+    "parkingSensor": {
+        "write": {
+            "type": "digital",
+            "pin": 4
+        },
+        "read": {
+            "type": "analog",
+            "pin": 1
+        }
+    },
+    "pDigital": {
+        "write": {
+            "type": "digital",
+            "pin": 2
+        },
+        "read": {
+            "type": "digital",
+            "pin": 2
+        }
+    }
+}

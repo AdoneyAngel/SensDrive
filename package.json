@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "conexión y gestión de sensores del coche",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "npm run test"
+    "test": "npm run test",
+    "dev": "node --inspect --experimental-strip-types --watch ./index.ts"
   },
   "repository": {
     "type": "git",
@@ -17,6 +19,10 @@
   },
   "homepage": "https://github.com/AdoneyAngel/SensDrive#readme",
   "dependencies": {
-    "@types/node": "^22.15.28"
+    "@serialport/parser-readline": "^13.0.0",
+    "@types/node": "^22.15.28",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "serialport": "^13.0.0"
   }
 }
