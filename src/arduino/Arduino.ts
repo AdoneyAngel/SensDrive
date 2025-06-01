@@ -1,4 +1,3 @@
-import "dotenv/config"
 import ErrorUtil from "../utils/ErrorUtil.ts"
 import { SerialPort } from "serialport"
 import { ReadlineParser } from '@serialport/parser-readline';
@@ -11,17 +10,20 @@ class Arduino {
     private static serialConnection: SerialPort
     private static pipe: ReadlineParser
     public static ready: boolean = false
-    private static streamnigPins: {pin: number, type: string, callBack: (...args: any[]) => void}[] = []
+    private static streamnigPins: { pin: number, type: string, callBack: (...args: any[]) => void }[] = []
+    private static productId: number
 
     private constructor() {
-        Arduino.port = process.env.ARDUINO_PORT ?? ""
         Arduino.serial = Number(process.env.ARDUINO_SERIAL) || 9600
+        Arduino.productId = Number(process.env.ARDUINO_PRODUCT_ID) ?? 0
 
         Arduino.connectArduino()
     }
 
-    public static connectArduino() {
-        try {
+    public static async connectArduino(then: (...args: any[]) => void = () => { }) {
+        return new Promise(async (resolve, reject) => {
+            await Arduino.searchPort()
+
             const serialConnection = new SerialPort({
                 path: Arduino.port,
                 baudRate: Arduino.serial
@@ -33,16 +35,44 @@ class Arduino {
 
             serialConnection.on("open", () => {
                 Arduino.ready = true
+
+                console.log(`☑️  Arduino connected on PORT:${Arduino.port} SERIAL:${Arduino.serial}`)
+
+                then()
+
+                resolve(true)
             })
 
             serialConnection.on("error", err => {
-                ErrorUtil.exception(err)
+                ErrorUtil.exception(err, "Error connencting Arduino, trying another PORT")
                 Arduino.ready = false
-                setTimeout(Arduino.connectArduino, 2000)
-            })
 
-        } catch (err: any) {
+                //Try again with another port
+                setTimeout(() => {
+                    Arduino.connectArduino(then)
+                }, 500)
+            })
+        })
+    }
+
+    private static async searchPort(): Promise<string> {
+        const ports = await SerialPort.list()
+        let validPort = ""
+
+        for (const port of ports) {
+            if (Arduino.productId && port.productId == Arduino.productId) {
+                validPort = port.path
+                break;
+
+            }
         }
+
+        if (!validPort) {
+            validPort = "fdsafds"
+        }
+
+        Arduino.port = validPort
+        return validPort
     }
 
     public static getInstance(): Arduino {
@@ -60,7 +90,7 @@ class Arduino {
             }
 
             Arduino.pipe.once("data", (data: string) => {
-                resolve(Number(data.trim())/1000)
+                resolve(Number(data.trim()) / 1000)
             })
 
             Arduino.serialConnection.write(message + '\n', (err: any) => {
@@ -91,7 +121,7 @@ class Arduino {
         return Arduino.streamnigPins.find(actualStream => actualStream.pin == pin && actualStream.type == type);
     }
 
-    private static async stream(pin: number, type: string, callBack: (...args: any[]) => void): Promise<boolean>{
+    private static async stream(pin: number, type: string, callBack: (...args: any[]) => void): Promise<boolean> {
         //Check if stream is active
         if (this.findStream(pin, type)) {
             return true
@@ -101,8 +131,8 @@ class Arduino {
         await Arduino.send(`s+${type}${pin}`)
 
         //Create callback
-        const dataCallBack = (data:string) => {
-            
+        const dataCallBack = (data: string) => {
+
             if (data.toString().includes(`${type}-${pin}:`)) {
                 data = data.toString().trim().split(":")[1]
 
@@ -118,7 +148,7 @@ class Arduino {
         })
 
         Arduino.pipe.on(`data`, dataCallBack)
-        
+
         return true
     }
     private static async endStream(pin: number, type: string): Promise<boolean> {
@@ -130,7 +160,7 @@ class Arduino {
 
         Arduino.pipe.off("data", originalStream.callBack)//Remove event listener
         await Arduino.send(`s-${type}${pin}`)//Stop arduino stream
-        
+
         //Remove from local
         Arduino.streamnigPins = Arduino.streamnigPins.filter(actualStream => actualStream.pin != pin && actualStream.type != type)
 
