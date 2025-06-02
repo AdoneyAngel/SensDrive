@@ -4,6 +4,11 @@ import { ReadlineParser } from '@serialport/parser-readline';
 import pinType from "../enums/PinType.ts";
 import EventEmitter from "events";
 
+/**
+ * Events
+ * start
+ */
+
 class Arduino {
     public static port: string
     public static serial: number
@@ -56,7 +61,7 @@ class Arduino {
                     then()
                     resolve(true)
 
-                    Arduino.emit("start", () =>{})
+                    Arduino.emit("start", () =>{})                    
                 })
             })
 
@@ -69,6 +74,20 @@ class Arduino {
                     Arduino.connectArduino(then)
                 }, 500)
             })
+
+            serialConnection.on("close", ()=>{
+                Arduino.connectArduino(Arduino.restartStreams)
+            })
+        })
+    }
+
+    private static restartStreams() {
+        const originalStreams = Arduino.streamnigPins
+
+        Arduino.streamnigPins = []
+
+        originalStreams.forEach((actualStream:any) => {
+            Arduino.stream(actualStream.pin, actualStream.type, actualStream.callBack)
         })
     }
 
@@ -170,7 +189,7 @@ class Arduino {
         let updatedStreamingPins = Arduino.streamnigPins
         let securedDataNumber = originalDataNumber
 
-        const nHistoryLength = 5
+        const nHistoryLength = 10
 
         if (originalStream.history.length < nHistoryLength) {
             originalStream.history.push(originalDataNumber)

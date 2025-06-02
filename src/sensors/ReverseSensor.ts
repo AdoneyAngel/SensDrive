@@ -1,6 +1,12 @@
 import Sensor from "./abstracts/Sensor.ts";
 import PinsMap from "../PinsMap.json" with {type: "json"}
 
+/**
+ * Events
+ * startReverse
+ * endReverse
+ */
+
 class ReverseSensor extends Sensor {
     private status: number
 
