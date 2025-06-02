@@ -1,5 +1,4 @@
 import Arduino from "../arduino/Arduino.ts"
-import Sensor from "../sensors/abstracts/Sensor.ts"
 import ParkingSensor from "../sensors/ParkingSensor.ts"
 import Reverse from "../sensors/ReverseSensor.ts"
 import SensorTest from "../sensors/SensorTest.ts"
@@ -18,7 +17,7 @@ class Car {
 
         //Start when Arduino is ON
 
-        Arduino.on("start", Car.start)
+        Arduino.once("start", Car.start)
     }
 
     public static async start(): Promise<boolean> {

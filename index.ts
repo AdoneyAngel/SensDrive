@@ -41,12 +41,10 @@ app.get("/a", async (req, res) => {
 
     parkin.stream((data) => {
         console.log("parking: " + data)
-        console.clear()
     })
 
     parkin.stream((data) => {
         console.log("duplicado: " + data)
-        console.clear()
     })
 
     pTest.stream(data => {
