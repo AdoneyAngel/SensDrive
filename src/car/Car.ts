@@ -1,12 +1,25 @@
+import EventEmitter from "events"
 import Arduino from "../arduino/Arduino.ts"
 import ParkingSensor from "../sensors/ParkingSensor.ts"
 import Reverse from "../sensors/ReverseSensor.ts"
 import SensorTest from "../sensors/SensorTest.ts"
 import ErrorUtil from "../utils/ErrorUtil.ts"
+import Sensor from "../sensors/abstracts/Sensor.ts"
+
+/**
+ * Events
+ * start
+ * stop
+ * startReverse 
+ * endReverse 
+ */
 
 class Car {
     public static instance: Car
-    private static sensors: {}
+    private static sensors: {
+        [key: string]: Sensor
+    }
+    private static emitter: EventEmitter
 
     private constructor() {
         Car.sensors = {
@@ -15,14 +28,50 @@ class Car {
             reverseSensor: new Reverse()
         }
 
+        Car.emitter = new EventEmitter()
+
         //Start when Arduino is ON
 
         Arduino.once("start", Car.start)
     }
 
+    private static emit(eventName: string, response: any) {
+        Car.emitter.emit(eventName, response)
+    }
+
+    public static on(eventName: string, callBack: (...args: any[]) => void) {
+        Car.emitter.on(eventName, callBack)
+    }
+
+    public static once(eventName: string, callBack: (...args: any[]) => void) {
+        Car.emitter.once(eventName, callBack)
+    }
+
     public static async start(): Promise<boolean> {
         //Start all initializable sensors
         await Car.startSensors()
+
+        //---Config each sensor
+        //Reverse sensor
+        if (Car.sensors.reverseSensor) {
+            Car.sensors.reverseSensor.on("startReverse", () => {
+                Car.emit("startReverse", true)
+            })
+            Car.sensors.reverseSensor.on("startReverse", () => {
+                Car.emit("endReverse", true)
+            })
+        }
+
+        Car.emit("start", true)
+
+        return true
+    }
+
+    public static async stop(): Promise<boolean> {
+        //Stop all initializable sensors
+        await Car.stopSensors()
+
+        Car.emit("stop", true)
 
         return true
     }
@@ -34,6 +83,18 @@ class Car {
             const actualSensor:any = initializableSensors[index]
 
             await actualSensor.start()
+        }
+
+        return true
+    }
+
+    private static async stopSensors(): Promise<boolean> {
+        const initializableSensors = Object.values(Car.sensors).filter((actualSensor:any) => actualSensor.initializable)
+
+        for (let index = 0; index<initializableSensors.length; index++) {
+            const actualSensor:any = initializableSensors[index]
+
+            await actualSensor.stop()
         }
 
         return true

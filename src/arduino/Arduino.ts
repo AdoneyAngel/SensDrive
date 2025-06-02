@@ -80,6 +80,8 @@ class Arduino {
             })
 
             serialConnection.on("close", () => {
+                console.log("🟥 Arduino is OFF")
+                
                 Arduino.connectArduino(Arduino.restartStreams)
             })
         })
@@ -97,7 +99,6 @@ class Arduino {
     }
 
     private static restartStreams() {
-        console.log("restarting")
         const originalStreams = Arduino.streamnigPins
         Arduino.streamnigPins = []
 

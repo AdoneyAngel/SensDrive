@@ -3,6 +3,8 @@ import PinsMap from "../PinsMap.json" with {type: "json"}
 
 /**
  * Events
+ * start
+ * stop
  * startReverse
  * endReverse
  */
@@ -30,12 +32,16 @@ class ReverseSensor extends Sensor {
                 }
             })
 
+            this.emit("start", true)
+
             resolve(true)
         })
 
     }
 
     public async stop(): Promise<boolean> {
+        this.removeAllListeners()
+        this.emit("stop", true)
         return await this.endStream()
     }
 }
