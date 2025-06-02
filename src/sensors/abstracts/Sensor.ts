@@ -1,7 +1,7 @@
 import Arduino from "../../arduino/Arduino.ts";
 import pinType from "../../enums/PinType.ts";
 
-abstract class ReadableSensor {
+abstract class Sensor {
     pins: {
         read?: {
             type: string,
@@ -15,9 +15,7 @@ abstract class ReadableSensor {
     }
 
     public async read(): Promise<number> {
-        if (!Arduino.ready) {
-            return 0
-        }
+        if (!Arduino.ready) return 0
         if (!this.pins.read) return 0
 
         let result = 0
@@ -32,13 +30,11 @@ abstract class ReadableSensor {
         return result
     }
 
-    public async write(value: number): Promise<number> {
-        if (!Arduino.ready) {
-            return 0
-        }
-        if (!this.pins.write) return 0
+    public async write(value: number): Promise<boolean> {
+        if (!Arduino.ready) return false
+        if (!this.pins.write) return false
 
-        let result = 0
+        let result = false
 
         if (this.pins.write.type == pinType.ANALOG.name) {
             result = await Arduino.analogWrite(this.pins.write.pin, value)
@@ -50,29 +46,51 @@ abstract class ReadableSensor {
         return result
     }
 
+    public async ask(value: number): Promise<number> {
+        if (!Arduino.ready) return 0
+        if (!this.pins.write) return 0
+
+        let result = 0
+
+        if (this.pins.write.type == pinType.ANALOG.name) {
+            result = await Arduino.analogAsk(this.pins.write.pin, value)
+
+        } else if (this.pins.write.type == pinType.DIGITAL.name) {
+            result = await Arduino.digitalAsk(this.pins.write.pin, value)
+        }
+
+        return result
+    }
+
     public async stream(callBack: (...args: any[]) => void): Promise<boolean> {
+        if (!Arduino.ready) return false
+        if (!this.pins.read) return false
+
         if (this.pins.read?.type == pinType.DIGITAL.name) {
             return Arduino.digitalStream(this.pins.read.pin, callBack)
 
         } else if (this.pins.read?.type == pinType.ANALOG.name) {
             return Arduino.analogStream(this.pins.read.pin, callBack)
-            
+
         }
 
         return false
     }
 
     public async endStream(): Promise<boolean> {
+        if (!Arduino.ready) return false
+        if (!this.pins.read) return false
+
         if (this.pins.read?.type == pinType.DIGITAL.name) {
             return Arduino.digitalEndStream(this.pins.read.pin)
 
         } else if (this.pins.read?.type == pinType.ANALOG.name) {
             return Arduino.analogEndStream(this.pins.read.pin)
-            
+
         }
 
         return false
     }
 }
 
-export default ReadableSensor
+export default Sensor

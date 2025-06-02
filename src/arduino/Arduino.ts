@@ -44,10 +44,10 @@ class Arduino {
             })
 
             serialConnection.on("error", err => {
-                ErrorUtil.exception(err, "Error connencting Arduino, trying another PORT")
+                ErrorUtil.exception(err, "Error connencting Arduino, searching port")
                 Arduino.ready = false
 
-                //Try again with another port
+                //Try again
                 setTimeout(() => {
                     Arduino.connectArduino(then)
                 }, 500)
@@ -68,7 +68,7 @@ class Arduino {
         }
 
         if (!validPort) {
-            validPort = "fdsafds"
+            validPort = "invalid port"
         }
 
         Arduino.port = validPort
@@ -83,38 +83,69 @@ class Arduino {
         return Arduino.instance
     }
 
-    private static async send(message: string): Promise<number> {
+    private static async checkConnection(): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            if (!Arduino.serialConnection.isOpen) {
+                Arduino.connectArduino(() => resolve(true))
+
+            } else {
+                resolve(true)
+            }
+        })
+    }
+
+    private static async send(message: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await Arduino.checkConnection()
+
             if (!Arduino.serialConnection || !Arduino.ready) {
                 return reject(new Error("Arduino not ready"))
             }
 
-            Arduino.pipe.once("data", (data: string) => {
-                resolve(Number(data.trim()) / 1000)
-            })
-
             Arduino.serialConnection.write(message + '\n', (err: any) => {
                 if (err) {
                     reject(err)
+
+                } else {
+                    resolve(true)
                 }
             })
         })
     }
 
-    public static async digitalWrite(pin: number, value: number): Promise<number> {
-        return Arduino.send(`w${pinType.DIGITAL.letter}${pin}:${value}`)
+    private static async sendAndResponse(message: string): Promise<number> {
+        return new Promise(async (resolve, reject) => {
+            await Arduino.send(message)
+
+            Arduino.pipe.once("data", (data: string) => {
+                resolve(Number(data.trim())/1000)
+            })
+
+        })
     }
 
-    public static async analogWrite(pin: number, value: number): Promise<number> {
-        return Arduino.send(`w${pinType.ANALOG.letter}${pin}:${value}`)
+    public static async digitalWrite(pin: number, value: number): Promise<boolean> {
+        return await Arduino.send(`w${pinType.DIGITAL.letter}${pin}:${value}`)
+    }
+
+    public static async analogWrite(pin: number, value: number): Promise<boolean> {
+        return await Arduino.send(`w${pinType.ANALOG.letter}${pin}:${value}`)
+    }
+
+    public static async digitalAsk(pin: number, value: number): Promise<number> {
+        return await Arduino.sendAndResponse(`w${pinType.DIGITAL.letter}${pin}:${value}`)
+    }
+
+    public static async analogAsk(pin: number, value: number): Promise<number> {
+        return await Arduino.sendAndResponse(`w${pinType.ANALOG.letter}${pin}:${value}`)
     }
 
     public static async digitalRead(pin: number): Promise<number | any> {
-        return Arduino.send(`p${pinType.DIGITAL.letter}${pin}`)
+        return await Arduino.sendAndResponse(`p${pinType.DIGITAL.letter}${pin}`)
     }
 
     public static async analogRead(pin: number): Promise<number | any> {
-        return Arduino.send(`p${pinType.ANALOG.letter}${pin}`)
+        return await Arduino.sendAndResponse(`p${pinType.ANALOG.letter}${pin}`)
     }
 
     private static findStream(pin: number, type: string) {

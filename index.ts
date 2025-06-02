@@ -21,7 +21,7 @@ app.post("/", async (req, res) => {
 
     const body = req.body
 
-    Car.writeSensor(SensorTest, body.value)
+    await Car.writeSensor(SensorTest, body.value)
 
     res.send("respuesta")
 })
