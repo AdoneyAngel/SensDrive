@@ -46,22 +46,6 @@ abstract class Sensor {
         return result
     }
 
-    public async ask(value: number): Promise<number> {
-        if (!Arduino.ready) return 0
-        if (!this.pins.write) return 0
-
-        let result = 0
-
-        if (this.pins.write.type == pinType.ANALOG.name) {
-            result = await Arduino.analogAsk(this.pins.write.pin, value)
-
-        } else if (this.pins.write.type == pinType.DIGITAL.name) {
-            result = await Arduino.digitalAsk(this.pins.write.pin, value)
-        }
-
-        return result
-    }
-
     public async stream(callBack: (...args: any[]) => void): Promise<boolean> {
         if (!Arduino.ready) return false
         if (!this.pins.read) return false

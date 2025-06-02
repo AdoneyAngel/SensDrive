@@ -113,7 +113,7 @@ class Arduino {
         })
     }
 
-    public static async sendAndResponse(message: string): Promise<number> {
+    public static async ask(message: string): Promise<number> {
         return new Promise(async (resolve, reject) => {
             await Arduino.send(message)
 
@@ -132,20 +132,12 @@ class Arduino {
         return await Arduino.send(`w${pinType.ANALOG.letter}${pin}:${value}`)
     }
 
-    public static async digitalAsk(pin: number, value: number): Promise<number> {
-        return await Arduino.sendAndResponse(`w${pinType.DIGITAL.letter}${pin}:${value}`)
-    }
-
-    public static async analogAsk(pin: number, value: number): Promise<number> {
-        return await Arduino.sendAndResponse(`w${pinType.ANALOG.letter}${pin}:${value}`)
-    }
-
     public static async digitalRead(pin: number): Promise<number | any> {
-        return await Arduino.sendAndResponse(`p${pinType.DIGITAL.letter}${pin}`)
+        return await Arduino.ask(`p${pinType.DIGITAL.letter}${pin}`)
     }
 
     public static async analogRead(pin: number): Promise<number | any> {
-        return await Arduino.sendAndResponse(`p${pinType.ANALOG.letter}${pin}`)
+        return await Arduino.ask(`p${pinType.ANALOG.letter}${pin}`)
     }
 
     private static findStream(pin: number, type: string) {
