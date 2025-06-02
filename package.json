@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "npm run test",
-    "dev": "node --inspect --experimental-strip-types --watch ./index.ts"
+    "dev": "node --inspect --experimental-strip-types --watch ./index.ts",
+    "start": "node --experimental-strip-types ./index.ts"
   },
   "repository": {
     "type": "git",

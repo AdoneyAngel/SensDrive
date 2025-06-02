@@ -5,6 +5,8 @@ import Reverse from "../sensors/ReverseSensor.ts"
 import SensorTest from "../sensors/SensorTest.ts"
 import ErrorUtil from "../utils/ErrorUtil.ts"
 import Sensor from "../sensors/abstracts/Sensor.ts"
+import Speaker from "../sensors/Speaker.ts"
+import Sound from "../sensors/tools/Sound.ts"
 
 /**
  * Events
@@ -25,14 +27,22 @@ class Car {
         Car.sensors = {
             parkingSensor: new ParkingSensor(),
             sensorTest: new SensorTest(),
-            reverseSensor: new Reverse()
+            reverseSensor: new Reverse(),
+            speaker: new Speaker()
         }
 
         Car.emitter = new EventEmitter()
-
         //Start when Arduino is ON
 
         Arduino.once("start", Car.start)
+    }
+
+    public static async startReverseSound () {
+        return await Sound.startReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
+    }
+
+    public static async endReverseSound () {
+        return await Sound.endReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
     }
 
     private static emit(eventName: string, response: any) {
@@ -55,9 +65,11 @@ class Car {
         //Reverse sensor
         if (Car.sensors.reverseSensor) {
             Car.sensors.reverseSensor.on("startReverse", () => {
+                Car.startReverseSound()
                 Car.emit("startReverse", true)
             })
             Car.sensors.reverseSensor.on("startReverse", () => {
+                Car.endReverseSound()
                 Car.emit("endReverse", true)
             })
         }

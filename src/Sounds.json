@@ -1,0 +1,76 @@
+{
+    "startReverse": [
+        {
+            "frecuency": 100,
+            "duration": 60,
+            "delay": 0
+        },
+        {
+            "frecuency": 100,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 200,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 300,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 400,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 500,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 600,
+            "duration": 60,
+            "delay": 0
+        }
+    ],
+    "endReverse": [
+        {
+            "frecuency": 600,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 500,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 400,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 300,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 200,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 100,
+            "duration": 40,
+            "delay": 0
+        },
+        {
+            "frecuency": 100,
+            "duration": 60,
+            "delay": 0
+        }
+    ]
+}

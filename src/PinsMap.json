@@ -9,6 +9,12 @@
             "pin": 1
         }
     },
+    "speaker": {
+        "write": {
+            "type": "digital",
+            "pin": 2
+        }
+    },
     "pDigital": {
         "write": {
             "type": "digital",

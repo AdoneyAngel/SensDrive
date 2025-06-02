@@ -288,6 +288,16 @@ class Arduino {
     public static async analogEndStream(pin: number): Promise<boolean> {
         return Arduino.endStream(pin, pinType.ANALOG.letter)
     }
+
+    public static async tone(digitalPin: number, frecuency: number, duration: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await Arduino.send(`t${digitalPin}:${frecuency}-${duration}`)
+
+            setTimeout(() => {
+                resolve(true)
+            }, duration);
+        })
+    }
 }
 
 export default Arduino

@@ -3,7 +3,7 @@ import Arduino from "../../arduino/Arduino.ts";
 import pinType from "../../enums/PinType.ts";
 
 abstract class Sensor extends EventEmitter {
-    pins: {
+    protected pins: {
         read?: {
             type: string,
             pin: number
@@ -14,7 +14,7 @@ abstract class Sensor extends EventEmitter {
 
         }
     }
-    initializable: boolean
+    protected initializable: boolean
 
     constructor(pins: {
         read?: {

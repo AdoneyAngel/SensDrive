@@ -167,8 +167,6 @@ void loop() {
   streamAllPins();
 
 
-
-
   if (Serial.available()) {
 
     String message = Serial.readStringUntil('\n');
@@ -178,7 +176,7 @@ void loop() {
 
     int value = -1;
 
-    if (method == "p") {  //pa1
+    if (method == "p") {  //p[a/d][pin]
 
       String pinType = sliceString(message, 1, 2);
       String pinStr = sliceString(message, 2, 0);
@@ -192,7 +190,7 @@ void loop() {
 
       sendMessage(String(value));
 
-    } else if (method == "w") {  //wa1:255
+    } else if (method == "w") {  //w[a/d][pin]:[value]
       String pinType = sliceString(message, 1, 2);
 
       String infoStr = sliceString(message, 2, 0);
@@ -210,7 +208,7 @@ void loop() {
         writeAnalogSensor(pin, value);
       }
 
-    } else if (method == "s") {
+    } else if (method == "s") {//s[+/-][d/a][pin]
       String action = sliceString(message, 1, 2);  //-\+ (stop\star streaming)
       String type = sliceString(message, 2, 3);
       String pin = sliceString(message, 3, 0);
@@ -223,6 +221,15 @@ void loop() {
           endStream(genStreamingtext(pin.toInt(), type));
         }
       }
+
+    } else if (method == "t") {//t4:1000-100 t[pin]:[frecuency]-[duration]
+      String info = sliceString(message, 1, 0);
+      String pin = splitString(info, ":", 0);
+      String frecuencyInfo = splitString(info, ":", 1);
+      String frecuency = splitString(frecuencyInfo, "-", 0);
+      String duration = splitString(frecuencyInfo, "-", 1);
+
+      tone(pin.toInt(), frecuency.toInt(), duration.toInt());
     }
   }
 }
