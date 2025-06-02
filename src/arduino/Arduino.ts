@@ -2,6 +2,7 @@ import ErrorUtil from "../utils/ErrorUtil.ts"
 import { SerialPort } from "serialport"
 import { ReadlineParser } from '@serialport/parser-readline';
 import pinType from "../enums/PinType.ts";
+import EventEmitter from "events";
 
 class Arduino {
     public static port: string
@@ -10,14 +11,24 @@ class Arduino {
     private static serialConnection: SerialPort
     private static pipe: ReadlineParser
     public static ready: boolean = false
-    private static streamnigPins: { pin: number, type: string, callBack: (...args: any[]) => void }[] = []
+    private static streamnigPins: { pin: number, type: string, history: Array<number>, callBack: (...args: any[]) => void }[] = []
     private static productId: number
+    private static emitter: EventEmitter
 
     private constructor() {
         Arduino.serial = Number(process.env.ARDUINO_SERIAL) || 9600
         Arduino.productId = Number(process.env.ARDUINO_PRODUCT_ID) ?? 0
+        Arduino.emitter = new EventEmitter()
 
         Arduino.connectArduino()
+    }
+
+    public static on(eventName: string, callBack: (...args: any[]) => void) {
+        Arduino.emitter.on(eventName, callBack)
+    }
+
+    private static emit(eventName: string, event: (...args: any[]) => void) {
+        this.emitter.emit(eventName, event)
     }
 
     public static async connectArduino(then: (...args: any[]) => void = () => { }) {
@@ -34,13 +45,19 @@ class Arduino {
             Arduino.pipe = parser
 
             serialConnection.on("open", () => {
-                Arduino.ready = true
+                console.log(`✅ Arduino connected on PORT:${Arduino.port} SERIAL:${Arduino.serial}`)
 
-                console.log(`☑️  Arduino connected on PORT:${Arduino.port} SERIAL:${Arduino.serial}`)
+                //Arduino connected but is off (restarted)
+                parser.once("data", (data: string) => { //If Arduino sent any response, its on
+                    Arduino.ready = true
+                    
+                    console.log("🟩 Arduino is ON")
+                    
+                    then()
+                    resolve(true)
 
-                then()
-
-                resolve(true)
+                    Arduino.emit("start", () =>{})
+                })
             })
 
             serialConnection.on("error", err => {
@@ -118,7 +135,7 @@ class Arduino {
             await Arduino.send(message)
 
             Arduino.pipe.once("data", (data: string) => {
-                resolve(Number(data.trim())/1000)
+                resolve(Number(data.trim()) / 1000)
             })
 
         })
@@ -144,6 +161,46 @@ class Arduino {
         return Arduino.streamnigPins.find(actualStream => actualStream.pin == pin && actualStream.type == type);
     }
 
+    private static secureStreamCallBack(pin: number, type: string, data: string, callBack: (...args: any[]) => void) {
+        const originalStream = Arduino.findStream(pin, type)
+        
+        if (!originalStream || isNaN(Number(data))) return data;
+        
+        const originalDataNumber = Number(data)
+        let updatedStreamingPins = Arduino.streamnigPins
+        let securedDataNumber = originalDataNumber
+
+        const nHistoryLength = 5
+
+        if (originalStream.history.length < nHistoryLength) {
+            originalStream.history.push(originalDataNumber)
+
+            updatedStreamingPins = updatedStreamingPins.map((actualStream:any) => {
+                if (actualStream.pin == originalStream.pin && actualStream.type == originalStream.type) {
+                    actualStream = originalStream
+                }
+
+                return actualStream
+            })
+
+        } else {    
+            securedDataNumber = originalStream.history.reduce((result,b) => result+b)/nHistoryLength
+            securedDataNumber = Math.round(securedDataNumber)
+
+            updatedStreamingPins = updatedStreamingPins.map((actualStream: any) => {
+                if (actualStream.pin == originalStream.pin && actualStream.type == originalStream.type) {
+                    actualStream.history = []
+                }
+
+                return actualStream
+            })
+
+            callBack(securedDataNumber.toString())
+        }
+
+        Arduino.streamnigPins = updatedStreamingPins
+    }
+
     private static async stream(pin: number, type: string, callBack: (...args: any[]) => void): Promise<boolean> {
         //Check if stream is active
         if (this.findStream(pin, type)) {
@@ -158,8 +215,8 @@ class Arduino {
 
             if (data.toString().includes(`${type}-${pin}:`)) {
                 data = data.toString().trim().split(":")[1]
-
-                callBack(data)
+                
+                Arduino.secureStreamCallBack(pin, type, data, callBack)
             }
         }
 
@@ -167,6 +224,7 @@ class Arduino {
         Arduino.streamnigPins.push({
             pin,
             type,
+            history: [],
             callBack: dataCallBack
         })
 

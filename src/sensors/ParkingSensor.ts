@@ -3,8 +3,7 @@ import Sensor from "./abstracts/Sensor.ts"
 
 class ParkingSensor extends Sensor{
     constructor () {
-        super()
-        this.pins = PinsMap.parkingSensor
+        super(PinsMap.parkingSensor)
     }
 }
 

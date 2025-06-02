@@ -5,6 +5,7 @@ import Arduino from "./src/arduino/Arduino.ts"
 import ParkingSensor from "./src/sensors/ParkingSensor.ts"
 import SensorTest from "./src/sensors/SensorTest.ts"
 import Car from "./src/car/Car.ts"
+import Reverse from "./src/sensors/ReverseSensor.ts"
 
 const app = express()
 const server = http.createServer(app)
@@ -35,8 +36,25 @@ app.get("/", async (req, res) => {
 app.get("/a", async (req, res) => {
 
     const parkin = new ParkingSensor()
+    const pTest = new SensorTest()
+    const reverse = new Reverse()
+
     parkin.stream((data) => {
         console.log("parking: " + data)
+        console.clear()
+    })
+
+    parkin.stream((data) => {
+        console.log("duplicado: " + data)
+        console.clear()
+    })
+
+    pTest.stream(data => {
+        // console.log("test: " + data)
+    })
+
+    reverse.stream(data => {
+        // console.log("reverse: " + data)
     })
 
     res.send(true)

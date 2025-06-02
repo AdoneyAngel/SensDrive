@@ -1,7 +1,8 @@
+import EventEmitter from "events";
 import Arduino from "../../arduino/Arduino.ts";
 import pinType from "../../enums/PinType.ts";
 
-abstract class Sensor {
+abstract class Sensor extends EventEmitter {
     pins: {
         read?: {
             type: string,
@@ -12,6 +13,32 @@ abstract class Sensor {
             pin: number
 
         }
+    }
+    initializable: boolean
+
+    constructor(pins: {
+        read?: {
+            type: string,
+            pin: number
+
+        }, write?: {
+            type: string,
+            pin: number
+
+        }
+    } = {}, initializable: boolean = false) {
+
+        super()
+        this.initializable = initializable
+        this.pins = pins
+    }
+
+    public async start(): Promise<boolean> {
+        return true
+    }
+
+    public async stop(): Promise<boolean> {
+        return true
     }
 
     public async read(): Promise<number> {
@@ -47,6 +74,7 @@ abstract class Sensor {
     }
 
     public async stream(callBack: (...args: any[]) => void): Promise<boolean> {
+
         if (!Arduino.ready) return false
         if (!this.pins.read) return false
 

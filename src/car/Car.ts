@@ -1,5 +1,7 @@
 import Arduino from "../arduino/Arduino.ts"
+import Sensor from "../sensors/abstracts/Sensor.ts"
 import ParkingSensor from "../sensors/ParkingSensor.ts"
+import Reverse from "../sensors/ReverseSensor.ts"
 import SensorTest from "../sensors/SensorTest.ts"
 import ErrorUtil from "../utils/ErrorUtil.ts"
 
@@ -10,8 +12,32 @@ class Car {
     private constructor() {
         Car.sensors = {
             parkingSensor: new ParkingSensor(),
-            sensorTest: new SensorTest()
+            sensorTest: new SensorTest(),
+            reverseSensor: new Reverse()
         }
+
+        //Start when Arduino is ON
+
+        Arduino.on("start", Car.start)
+    }
+
+    public static async start(): Promise<boolean> {
+        //Start all initializable sensors
+        await Car.startSensors()
+
+        return true
+    }
+
+    private static async startSensors(): Promise<boolean> {
+        const initializableSensors = Object.values(Car.sensors).filter((actualSensor:any) => actualSensor.initializable)
+
+        for (let index = 0; index<initializableSensors.length; index++) {
+            const actualSensor:any = initializableSensors[index]
+
+            await actualSensor.start()
+        }
+
+        return true
     }
 
     public static getInstance(): Car {
@@ -34,16 +60,14 @@ class Car {
             return 0
         }
     }
-    public static async writeAnalogSensor(pin: number, value: number): Promise<number> {
+    public static async writeAnalogSensor(pin: number, value: number): Promise<boolean> {
         try {
-            const result = await Arduino.analogWrite(pin, value)
-
-            return result
+            return await Arduino.analogWrite(pin, value)
 
         } catch (err) {
             ErrorUtil.exception(err)
 
-            return 0
+            return false
         }
     }
 
@@ -59,16 +83,14 @@ class Car {
             return 0
         }
     }
-    public static async writeDigitalSensor(pin: number, value: number): Promise<number> {
+    public static async writeDigitalSensor(pin: number, value: number): Promise<boolean> {
         try {
-            const result = await Arduino.digitalWrite(pin, value)
-
-            return result
+            return await Arduino.digitalWrite(pin, value)
 
         } catch (err) {
             ErrorUtil.exception(err)
 
-            return 0
+            return false
         }
     }
 

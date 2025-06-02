@@ -18,5 +18,11 @@
             "type": "digital",
             "pin": 2
         }
+    },
+    "reverseSensor": {
+        "read": {
+            "type": "digital",
+            "pin": 7
+        }
     }
 }

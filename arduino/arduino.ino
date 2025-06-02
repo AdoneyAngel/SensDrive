@@ -8,6 +8,8 @@ void setup() {
   for (int index = 0; index < 10; index++) {
     streamingPins[index] = "";
   }
+
+  Serial.println("READY");
 }
 
 //----READ SENSORS
