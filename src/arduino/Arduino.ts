@@ -113,7 +113,7 @@ class Arduino {
         })
     }
 
-    private static async sendAndResponse(message: string): Promise<number> {
+    public static async sendAndResponse(message: string): Promise<number> {
         return new Promise(async (resolve, reject) => {
             await Arduino.send(message)
 
