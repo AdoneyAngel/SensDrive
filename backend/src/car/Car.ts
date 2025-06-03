@@ -18,6 +18,7 @@ import Sound from "../sensors/tools/Sound.ts"
 
 class Car {
     public static instance: Car
+    private static soundList: ((...args: any[]) => void)[] = []
     private static sensors: {
         [key: string]: Sensor
     }
@@ -38,11 +39,28 @@ class Car {
     }
 
     public static async startReverseSound () {
-        return await Sound.startReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
+        return await Car.reproduceSound(async () => {
+            return await Sound.startReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
+        })
     }
 
     public static async endReverseSound () {
-        return await Sound.endReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
+        return await Car.reproduceSound(async () => {
+            return await Sound.endReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
+        })
+    }
+
+    private static async reproduceSound(fn: (...args: any[]) => any): Promise<boolean> {
+
+        if (!Car.soundList.find((actualFn) => actualFn.toString() == fn.toString())) {
+            Car.soundList.push(fn)
+            await fn()
+
+            //Remove from list
+            Car.soundList = Car.soundList.filter(actualFn => actualFn.toString() != fn.toString())
+        }
+        
+        return true
     }
 
     private static emit(eventName: string, response: any) {
