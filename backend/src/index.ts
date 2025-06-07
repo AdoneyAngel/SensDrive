@@ -1,14 +1,22 @@
 import express from "express"
 import http from "node:http"
 import "dotenv/config"
-import Arduino from "./src/arduino/Arduino.ts"
-import ParkingSensor from "./src/sensors/ParkingSensor.ts"
-import SensorTest from "./src/sensors/SensorTest.ts"
-import Car from "./src/car/Car.ts"
-import Reverse from "./src/sensors/ReverseSensor.ts"
+import Arduino from "./arduino/Arduino.ts"
+import ParkingSensor from "./sensors/ParkingSensor.ts"
+import SensorTest from "./sensors/SensorTest.ts"
+import Car from "./car/Car.ts"
+import Reverse from "./sensors/ReverseSensor.ts"
+import CarWebSocket from "./api/CarWebSockets.ts"
+
+import { Server as ServerIo } from "socket.io"
 
 const app = express()
 const server = http.createServer(app)
+const ws = new ServerIo(server, {
+    cors: {
+        origin: "*"
+    }
+})
 
 //Middewares
 app.use(express.json())
@@ -16,6 +24,9 @@ app.use(express.json())
 //Start singletons
 Arduino.getInstance() //Se inicia Arduino y su conexión
 Car.getInstance() //Todos los sensores
+
+//Routes
+new CarWebSocket(ws)
 
 //TEST URL's
 app.post("/", async (req, res) => {

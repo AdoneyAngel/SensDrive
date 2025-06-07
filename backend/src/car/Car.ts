@@ -199,7 +199,7 @@ class Car {
         return null;
     }
 
-    public static async writeSensor(type: any, value: number): Promise<number|null>{
+    public static async writeSensor(type: any, value: number): Promise<boolean|null>{
 
         for (const actualSensor of Object.values(Car.sensors)) {
             if (actualSensor instanceof type) {
@@ -208,6 +208,20 @@ class Car {
         }
 
         return null;
+    }
+
+    public static async streamDigitalSensor(pin: number, callBack: (...args: any[]) => void): Promise<boolean> {
+        return await Arduino.digitalStream(pin, callBack)
+    }
+    public static async endStreamDigitalSensor(pin: number): Promise<boolean> {
+        return await Arduino.digitalEndStream(pin)
+    }
+
+    public static async streamAnalogSensor(pin: number, callBack: (...args: any[]) => void): Promise<boolean> {
+        return await Arduino.analogStream(pin, callBack)
+    }
+    public static async endStreamAnalogSensor(pin: number): Promise<boolean> {
+        return await Arduino.analogEndStream(pin)
     }
 }
 

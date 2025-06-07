@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "npm run test",
-    "dev": "node --inspect --experimental-strip-types --watch ./index.ts",
-    "start": "node --experimental-strip-types ./index.ts"
+    "dev": "node --inspect --experimental-strip-types --watch ./src/index.ts",
+    "start": "node --experimental-strip-types ./src/index.ts",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,13 @@
     "@types/node": "22.15.28",
     "dotenv": "16.5.0",
     "express": "5.1.0",
-    "serialport": "13.0.0"
+    "express-ws": "5.0.2",
+    "serialport": "13.0.0",
+    "socket.io": "4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.2",
+    "@types/express-ws": "3.0.5",
+    "typescript": "5.8.3"
   }
 }

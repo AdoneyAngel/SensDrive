@@ -81,7 +81,7 @@ class Arduino {
 
             serialConnection.on("close", () => {
                 console.log("🟥 Arduino is OFF")
-                
+
                 Arduino.connectArduino(Arduino.restartStreams)
             })
         })
@@ -159,9 +159,19 @@ class Arduino {
         return new Promise(async (resolve, reject) => {
             await Arduino.send(message)
 
-            Arduino.pipe.once("data", (data: string) => {
-                resolve(Number(data.trim()) / 1000)
-            })
+            const askMethod = (data: string) => {
+
+                if (data.includes(message)) {//If the data is what we want, take the value and destroy the listener
+                    const value = Number(data.split(":")[1])
+
+                    Arduino.pipe.off("data", askMethod)
+
+                    resolve(value)
+                }
+            }
+
+            //Create the listener
+            Arduino.pipe.on("data", askMethod)
 
         })
     }
@@ -179,7 +189,7 @@ class Arduino {
     }
 
     public static async analogRead(pin: number): Promise<number | any> {
-        return await Arduino.ask(`p${pinType.ANALOG.letter}${pin}`)
+        return await Arduino.ask(`p${pinType.ANALOG.letter}${pin}`)/1024
     }
 
     private static findStream(pin: number, type: string) {

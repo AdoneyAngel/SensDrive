@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cliente WebSocket</title>
+</head>
+
+<body>
+    <h1>WebSocket Cliente</h1>
+    <button id="enviar">Enviar mensaje</button>
+    <button id="stop">Stop</button>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <script>
+        const socket = io("http://localhost:3001");
+
+        socket.on("connect", () => {
+            console.log("✅ Conectado con ID:", socket.id);
+        });
+
+        document.getElementById("enviar").addEventListener("click", () => {
+            // socket.emit("digitalRead", 4)
+            socket.emit("digitalStream", 2)
+        })
+
+        document.getElementById("stop").addEventListener("click", () => {
+            // socket.emit("digitalRead", 4)
+            socket.emit("endDigitalStream", 2)
+        })
+
+        socket.on("sd2", data => {
+            console.log(data)
+        })
+
+        
+    </script>
+</body>
+
+</html>

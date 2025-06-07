@@ -188,7 +188,9 @@ void loop() {
         value = readDigitalSensor(pin);
       }
 
-      sendMessage(String(value));
+      String responseMessage = "p"+pinType+pinStr+":"+String(value);
+
+      sendMessage(responseMessage);
 
     } else if (method == "w") {  //w[a/d][pin]:[value]
       String pinType = sliceString(message, 1, 2);
