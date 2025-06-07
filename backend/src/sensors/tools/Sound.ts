@@ -1,7 +1,7 @@
 import SoundList from "../../Sounds.json" with {type: "json"}
 
 class Sound {
-    private static async reproduce(fn: (frecuency: number, duration: number) => Promise<any>, soundMap: {frecuency: number, duration: number, delay: number}[]): Promise<boolean> {
+    public static async reproduce(fn: (frecuency: number, duration: number) => Promise<any>, soundMap: {frecuency: number, duration: number, delay: number}[]): Promise<boolean> {
         for (const melody of soundMap) {
             await this.delay(melody.delay)
             await fn(melody.frecuency, melody.duration)

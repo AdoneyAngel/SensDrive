@@ -47,23 +47,9 @@ app.get("/", async (req, res) => {
 app.get("/a", async (req, res) => {
 
     const parkin = new ParkingSensor()
-    const pTest = new SensorTest()
-    const reverse = new Reverse()
 
     parkin.stream((data) => {
         console.log("parking: " + data)
-    })
-
-    parkin.stream((data) => {
-        console.log("duplicado: " + data)
-    })
-
-    pTest.stream(data => {
-        // console.log("test: " + data)
-    })
-
-    reverse.stream(data => {
-        // console.log("reverse: " + data)
     })
 
     res.send(true)

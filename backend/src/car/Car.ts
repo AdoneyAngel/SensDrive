@@ -38,13 +38,13 @@ class Car {
         Arduino.once("start", Car.start)
     }
 
-    public static async startReverseSound () {
+    public static async startReverseSound() {
         return await Car.reproduceSound(async () => {
             return await Sound.startReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
         })
     }
 
-    public static async endReverseSound () {
+    public static async endReverseSound() {
         return await Car.reproduceSound(async () => {
             return await Sound.endReverse(Car.sensors.speaker.tone.bind(Car.sensors.speaker))
         })
@@ -59,7 +59,7 @@ class Car {
             //Remove from list
             Car.soundList = Car.soundList.filter(actualFn => actualFn.toString() != fn.toString())
         }
-        
+
         return true
     }
 
@@ -75,6 +75,34 @@ class Car {
         Car.emitter.once(eventName, callBack)
     }
 
+    public static async startReverseMode(): Promise<boolean> {
+        Car.streamSensor(ParkingSensor, (data) => {
+            let duration = Number(data) / 2
+            let delay = Number(data) / 2
+
+            if (data < 250) {
+                duration = 1000
+                delay = 0
+            }
+
+            console.log(`duration: ${duration}`)
+            console.log(`delay: ${delay}`)
+
+            Car.reproduceSound(async () => {
+                return await Sound.reproduce(Car.sensors.speaker.tone.bind(Car.sensors.speaker), [{ frecuency: 2000, duration, delay }])
+            })
+
+        })
+
+        return true
+    }
+
+    public static async stopReverseMode(): Promise<boolean> {
+        Car.endStreamSensor(ParkingSensor)
+
+        return true
+    }
+
     public static async start(): Promise<boolean> {
         //Start all initializable sensors
         await Car.startSensors()
@@ -84,10 +112,12 @@ class Car {
         if (Car.sensors.reverseSensor) {
             Car.sensors.reverseSensor.on("startReverse", () => {
                 Car.startReverseSound()
+                Car.startReverseMode()
                 Car.emit("startReverse", true)
             })
-            Car.sensors.reverseSensor.on("startReverse", () => {
+            Car.sensors.reverseSensor.on("endReverse", () => {
                 Car.endReverseSound()
+                Car.stopReverseMode()
                 Car.emit("endReverse", true)
             })
         }
@@ -107,10 +137,10 @@ class Car {
     }
 
     private static async startSensors(): Promise<boolean> {
-        const initializableSensors = Object.values(Car.sensors).filter((actualSensor:any) => actualSensor.initializable)
+        const initializableSensors = Object.values(Car.sensors).filter((actualSensor: any) => actualSensor.initializable)
 
-        for (let index = 0; index<initializableSensors.length; index++) {
-            const actualSensor:any = initializableSensors[index]
+        for (let index = 0; index < initializableSensors.length; index++) {
+            const actualSensor: any = initializableSensors[index]
 
             await actualSensor.start()
         }
@@ -119,10 +149,10 @@ class Car {
     }
 
     private static async stopSensors(): Promise<boolean> {
-        const initializableSensors = Object.values(Car.sensors).filter((actualSensor:any) => actualSensor.initializable)
+        const initializableSensors = Object.values(Car.sensors).filter((actualSensor: any) => actualSensor.initializable)
 
-        for (let index = 0; index<initializableSensors.length; index++) {
-            const actualSensor:any = initializableSensors[index]
+        for (let index = 0; index < initializableSensors.length; index++) {
+            const actualSensor: any = initializableSensors[index]
 
             await actualSensor.stop()
         }
@@ -188,26 +218,38 @@ class Car {
         return this.sensors
     }
 
-    public static async readSensor(type: any): Promise<number|null>{
-
+    public static getSensor(type: any): any {
         for (const actualSensor of Object.values(Car.sensors)) {
             if (actualSensor instanceof type) {
-                return await actualSensor.read()
+                return actualSensor
             }
         }
 
         return null;
     }
 
-    public static async writeSensor(type: any, value: number): Promise<boolean|null>{
+    public static async readSensor(type: any): Promise<number | null> {
+        const sensor = Car.getSensor(type)
 
-        for (const actualSensor of Object.values(Car.sensors)) {
-            if (actualSensor instanceof type) {
-                return await actualSensor.write(value)
-            }
-        }
+        return await sensor?.read();
+    }
 
-        return null;
+    public static async writeSensor(type: any, value: number): Promise<boolean | null> {
+        const sensor = Car.getSensor(type)
+
+        return await sensor?.write(value);
+    }
+
+    public static async streamSensor(type: any, callBack: (...args: any[]) => void) {
+        const sensor = Car.getSensor(type)
+
+        return await sensor.stream(callBack)
+    }
+
+    public static async endStreamSensor(type: any) {
+        const sensor = Car.getSensor(type)
+
+        return await sensor.endStream()
     }
 
     public static async streamDigitalSensor(pin: number, callBack: (...args: any[]) => void): Promise<boolean> {
