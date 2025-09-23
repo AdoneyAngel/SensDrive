@@ -2,11 +2,11 @@
     "parkingSensor": {
         "write": {
             "type": "digital",
-            "pin": 4
+            "pin": 2
         },
         "read": {
-            "type": "analog",
-            "pin": 1
+            "type": "digital",
+            "pin": 3
         }
     },
     "speaker": {

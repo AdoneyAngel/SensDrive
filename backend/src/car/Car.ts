@@ -85,9 +85,6 @@ class Car {
                 delay = 0
             }
 
-            console.log(`duration: ${duration}`)
-            console.log(`delay: ${delay}`)
-
             Car.reproduceSound(async () => {
                 return await Sound.reproduce(Car.sensors.speaker.tone.bind(Car.sensors.speaker), [{ frecuency: 2000, duration, delay }])
             })

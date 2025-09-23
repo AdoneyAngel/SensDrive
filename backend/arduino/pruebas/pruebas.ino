@@ -1,47 +1,30 @@
+const int trigPin = 2;   // Pin digital
+const int echoPin = 3;  // Pin digital (NO analógico)
+
 void setup() {
   Serial.begin(9600);
-}
-
-int readAnalogSensor(int pin) {
-  // No uses pinMode aquí
-  return analogRead(pin);
-}
-
-int readDigitalSensor(int pin) {
-  pinMode(pin, INPUT);
-  return digitalRead(pin);
-}
-
-String sliceString(String text, int from, int to) {
-  text.trim();
-  if (to <= 0 || to > text.length()) {
-    to = text.length();
-  }
-  return text.substring(from, to);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  digitalWrite(trigPin, LOW);
 }
 
 void loop() {
-  if (Serial.available()) {
-    String message = Serial.readStringUntil('\n');
-    message.trim();
+  // Pulso de trigger
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
 
-    if (message.length() < 3) return;
+  // Medir duración del pulso Echo
+  long duration = pulseIn(echoPin, HIGH, 30000); // timeout 30 ms (~5 m)
 
-    String method = sliceString(message, 0, 1);
-    String pinType = sliceString(message, 1, 2);
-    String pinStr = sliceString(message, 2, 0);
-    int pin = pinStr.toInt();
-
-    int value = -1;
-
-    if (method == "p") {
-      if (pinType == "a") {
-        value = readAnalogSensor(pin);
-      } else if (pinType == "d") {
-        value = readDigitalSensor(pin);
-      }
-
-      Serial.println(String(value));  // Envío final limpio
-    }
+  if (duration == 0) {
+    Serial.println("Sin eco");
+  } else {
+    long distance = duration * 0.034 / 2; // cm
+    Serial.print("Distancia: ");
+    Serial.print(distance);
+    Serial.println(" cm");
   }
+
+  delay(200);
 }

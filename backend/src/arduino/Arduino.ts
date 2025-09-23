@@ -189,7 +189,7 @@ class Arduino {
     }
 
     public static async analogRead(pin: number): Promise<number | any> {
-        return await Arduino.ask(`p${pinType.ANALOG.letter}${pin}`)/1024
+        return await Arduino.ask(`p${pinType.ANALOG.letter}${pin}`) / 1024
     }
 
     private static findStream(pin: number, type: string) {
@@ -307,6 +307,54 @@ class Arduino {
                 resolve(true)
             }, duration);
         })
+    }
+
+    public static async streamProximity(readPin: number, triggerPin: number, callBack: (...args: any[]) => void) {
+        //Check if stream is active
+        if (this.findStream(readPin, pinType.DIGITAL.letter) || this.findStream(triggerPin, pinType.DIGITAL.letter)) {
+            return true
+        }
+
+        //Start stream
+        await Arduino.send(`r+${readPin}-${triggerPin}`)
+
+        //Create callback
+        const dataCallBack = (data: string) => {
+
+            if (data.toString().includes(`r${readPin}-${triggerPin}:`)) {
+                data = data.toString().trim().split(":")[1]
+
+                Arduino.secureStreamCallBack(readPin, pinType.DIGITAL.letter, data, callBack)
+            }
+        }
+
+        //Save listener
+        Arduino.streamnigPins.push({
+            pin: readPin,
+            type: pinType.DIGITAL.letter,
+            history: [],
+            callBack: dataCallBack
+        })
+
+        Arduino.pipe.on(`data`, dataCallBack)
+
+        return true
+    }
+
+    public static async endStreamProximity(readPin: number, triggerPin: number) {
+        const originalStream = this.findStream(readPin, pinType.DIGITAL.letter)//Fin original stream
+
+        if (!originalStream) {
+            return true
+        }
+
+        Arduino.pipe.off("data", originalStream.callBack)//Remove event listener
+        await Arduino.send(`r-${readPin}-${triggerPin}`)//Stop arduino stream
+
+        //Remove from local
+        Arduino.streamnigPins = Arduino.streamnigPins.filter(actualStream => actualStream.pin != readPin && actualStream.type != pinType.DIGITAL.letter)
+
+        return true
     }
 }
 

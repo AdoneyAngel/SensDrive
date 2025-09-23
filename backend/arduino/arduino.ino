@@ -1,5 +1,6 @@
 int serialPort = 9600;
 String streamingPins[10];
+String proximitySensors[10];
 
 void setup() {
   Serial.begin(serialPort);
@@ -162,7 +163,107 @@ String genStreamingtext(int pin, String type) {
   return streamingText;
 }
 
+//----PROXIMITY
+void startProximity(String info) {
+  bool exist = false;
+  int freeIndex = 0;
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor == info) {
+      exist = true;
+
+    } else if (actualProximitySensor.length() == 0) {
+      freeIndex = index;
+    }
+  }
+
+  if (!exist) {
+    proximitySensors[freeIndex] = info;
+  }
+}
+void endProximity(String info) {
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor == info) {
+      proximitySensors[index] = "";
+
+      break;
+    }
+  }
+}
+
+void readAllProximity() {
+  //Set off
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor.length() > 0) {
+      String trigger = splitString(actualProximitySensor, "-", 1);
+      String echo = splitString(actualProximitySensor, "-", 0);
+
+      pinMode(echo.toInt(), INPUT);
+      pinMode(trigger.toInt(), OUTPUT);
+
+      digitalWrite(trigger.toInt(), LOW);
+    }
+  }
+
+  delayMicroseconds(2);
+
+  //Trigger
+
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor.length() > 0) {
+      String pin = splitString(actualProximitySensor, "-", 1);
+
+      digitalWrite(pin.toInt(), HIGH);
+    }
+  }
+
+  delayMicroseconds(10);
+
+  //Set off
+
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor.length() > 0) {
+      String pin = splitString(actualProximitySensor, "-", 1);
+
+      digitalWrite(pin.toInt(), LOW);
+    }
+  }
+
+  //Calc
+
+  for (int index = 0; index < (sizeof(proximitySensors) / sizeof(proximitySensors[0])); index++) {
+    String actualProximitySensor = proximitySensors[index];
+
+    if (actualProximitySensor.length() > 0) {
+      String readPin = splitString(actualProximitySensor, "-", 0);
+      String pin = splitString(actualProximitySensor, "-", 1);
+
+      long duration = pulseIn(readPin.toInt(), HIGH);
+      long distance = duration * 0.034 / 2;
+
+      Serial.println(readPin.toInt());
+
+      Serial.println("r" + readPin + "-" + pin + ":" + String(distance));
+    }
+  }
+
+  delay(25);
+}
+//----PROXIMITY
+
 void loop() {
+  //Proximity
+  readAllProximity();
+
   //Streams
   streamAllPins();
 
@@ -176,23 +277,24 @@ void loop() {
 
     int value = -1;
 
-    if (method == "p") {  //p[a/d][pin]
+    if (method == "p") {  //p[a/d][pin] //Read pin
 
       String pinType = sliceString(message, 1, 2);
       String pinStr = sliceString(message, 2, 0);
       int pin = pinStr.toInt();
 
-      if (pinType == "a") {
+      if (pinType == "a") {  //Analog pin
         value = readAnalogSensor(pin);
-      } else if (pinType == "d") {
+
+      } else if (pinType == "d") {  //Digital pin
         value = readDigitalSensor(pin);
       }
 
-      String responseMessage = "p"+pinType+pinStr+":"+String(value);
+      String responseMessage = "p" + pinType + pinStr + ":" + String(value);
 
       sendMessage(responseMessage);
 
-    } else if (method == "w") {  //w[a/d][pin]:[value]
+    } else if (method == "w") {  //w[a/d][pin]:[value] //Write/send to pin
       String pinType = sliceString(message, 1, 2);
 
       String infoStr = sliceString(message, 2, 0);
@@ -203,14 +305,14 @@ void loop() {
       String valueStr = splitString(infoStr, ":", 1);
       int value = valueStr.toInt();
 
-      if (pinType == "d") {
+      if (pinType == "d") {  //To digital pin
         writeDigitalSensor(pin, value);
 
-      } else if (pinType == "a") {
+      } else if (pinType == "a") {  //To analog pin
         writeAnalogSensor(pin, value);
       }
 
-    } else if (method == "s") {//s[+/-][d/a][pin]
+    } else if (method == "s") {                    //Stream                //s[+/-][d/a][pin]
       String action = sliceString(message, 1, 2);  //-\+ (stop\star streaming)
       String type = sliceString(message, 2, 3);
       String pin = sliceString(message, 3, 0);
@@ -224,7 +326,7 @@ void loop() {
         }
       }
 
-    } else if (method == "t") {//t4:1000-100 t[pin]:[frecuency]-[duration]
+    } else if (method == "t") {  //Tone  //t4:1000-100 t[pin]:[frecuency]-[duration]
       String info = sliceString(message, 1, 0);
       String pin = splitString(info, ":", 0);
       String frecuencyInfo = splitString(info, ":", 1);
@@ -232,6 +334,19 @@ void loop() {
       String duration = splitString(frecuencyInfo, "-", 1);
 
       tone(pin.toInt(), frecuency.toInt(), duration.toInt());
+
+    } else if (method == "r") {  //Proximity  //r[+/-][readPin]-[pin]
+      String action = sliceString(message, 1, 2);
+      String info = sliceString(message, 2, 0);
+      String readPin = splitString(info, "-", 0);
+      String pin = splitString(info, "-", 1);
+
+      if (action == "+") {  //Start proximity stream
+        startProximity(readPin + "-" + pin);
+
+      } else if (action == "-") {  //End proximity
+        endProximity(readPin + "-" + pin);
+      }
     }
   }
 }
